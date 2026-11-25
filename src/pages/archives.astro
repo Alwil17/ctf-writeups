@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import Difficulty from '../components/Difficulty.astro';
+import { getPosts, postUrl, isoDate } from '../lib/posts';
+
+const posts = await getPosts();
+const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))];
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' });
+---
+
+<Base title="Archive" section="archive">
+  <header class="page-header">
+    <h1>Archive</h1>
+    <p class="lede">Every post, newest first.</p>
+  </header>
+  {
+    years.map((y) => (
+      <section class="archive-year">
+        <h2>{y}</h2>
+        <ol class="archive-list">
+          {posts
+            .filter((p) => p.data.date.getUTCFullYear() === y)
+            .map((p) => (
+              <li>
+                <time datetime={isoDate(p.data.date)}>{fmt(p.data.date)}</time>
+                <a href={postUrl(p)}>{p.data.title}</a>
+                <Difficulty level={p.data.difficulty} />
+              </li>
+            ))}
+        </ol>
+      </section>
+    ))
+  }
+</Base>

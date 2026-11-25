@@ -1,0 +1,36 @@
+---
+import Difficulty from './Difficulty.astro';
+import { type Post, postUrl, summaryOf, formatDate, isoDate, eventOf, categoryOf, slugify } from '../lib/posts';
+
+interface Props {
+  post: Post;
+  /** Show the event name (hidden when rows are already grouped by event). */
+  showEvent?: boolean;
+}
+const { post, showEvent = false } = Astro.props;
+const d = post.data;
+const summary = summaryOf(post);
+const event = eventOf(post);
+const category = categoryOf(post);
+---
+
+<li
+  class="post-row"
+  data-event={slugify(event)}
+  data-category={slugify(category)}
+  data-difficulty={d.difficulty ?? 'unknown'}
+  data-lang={d.lang}
+  data-text={`${d.title} ${summary} ${d.tags.join(' ')} ${category}`.toLowerCase()}
+>
+  <div class="post-row-head">
+    <h3><a href={postUrl(post)} hreflang={d.lang}>{d.title}</a></h3>
+    <Difficulty level={d.difficulty} />
+  </div>
+  {summary && <p class="post-row-summary" lang={d.lang}>{summary}</p>}
+  <p class="post-row-meta">
+    <time datetime={isoDate(d.date)}>{formatDate(d.date)}</time>
+    {showEvent && <span>{event}</span>}
+    <span>{d.category_label ?? category}</span>
+    <span class="lang-tag" title={d.lang === 'fr' ? 'Written in French' : 'Written in English'}>{d.lang.toUpperCase()}</span>
+  </p>
+</li>

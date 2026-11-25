@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*~
+.DS_Store
+Thumbs.db

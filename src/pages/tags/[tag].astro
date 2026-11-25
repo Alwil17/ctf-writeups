@@ -1,0 +1,34 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostRow from '../../components/PostRow.astro';
+import { getPosts, slugify, url, type Post } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const tags = new Map<string, { name: string; posts: Post[] }>();
+  for (const p of posts)
+    for (const t of p.data.tags) {
+      const k = slugify(t);
+      if (!tags.has(k)) tags.set(k, { name: t, posts: [] });
+      tags.get(k)!.posts.push(p);
+    }
+  return [...tags.entries()].map(([tag, v]) => ({ params: { tag }, props: v }));
+}
+
+interface Props {
+  name: string;
+  posts: Post[];
+}
+const { name, posts } = Astro.props;
+---
+
+<Base title={`#${name}`} description={`CTF writeups tagged ${name}.`} section="tags">
+  <header class="page-header">
+    <p class="crumbs"><a href={url('/tags/')}>Tags</a></p>
+    <h1>#{name}</h1>
+    <p class="lede">{posts.length} {posts.length === 1 ? 'writeup' : 'writeups'}</p>
+  </header>
+  <ul class="post-list">
+    {posts.map((p) => <PostRow post={p} showEvent />)}
+  </ul>
+</Base>

@@ -1,0 +1,35 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/posts';
+const bundle = url('/pagefind/');
+---
+
+<Base title="Search" section="search">
+  <Fragment slot="head">
+    <link href={`${bundle}pagefind-ui.css`} rel="stylesheet" />
+  </Fragment>
+  <header class="page-header">
+    <h1>Search</h1>
+    <p class="lede">Full-text search across every writeup: commands, CVEs, tools, techniques.</p>
+  </header>
+  <div id="search" class="pagefind" data-bundle={bundle}></div>
+  <noscript><p>Search needs JavaScript. Browse the <a href={url('/')}>full list of writeups</a> instead.</p></noscript>
+</Base>
+
+<script>
+  const host = document.getElementById('search')!;
+  const bundle = host.dataset.bundle!;
+  const s = document.createElement('script');
+  s.src = `${bundle}pagefind-ui.js`;
+  s.onload = () => {
+    // @ts-expect-error PagefindUI is a global from the script above.
+    const ui = new PagefindUI({ element: '#search', bundlePath: bundle, showSubResults: true, showImages: false, resetStyles: false, autofocus: true });
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) ui.triggerSearch(q);
+  };
+  s.onerror = () => {
+    host.innerHTML =
+      '<p>The search index is built at deploy time and is missing here. Run <code>npm run build</code>, then <code>npm run preview</code>.</p>';
+  };
+  document.head.append(s);
+</script>

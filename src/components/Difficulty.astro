@@ -1,0 +1,8 @@
+---
+interface Props {
+  level?: string;
+}
+const { level } = Astro.props;
+---
+
+{level && <span class={`diff diff-${level}`}>{level}</span>}

@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, url } from '../lib/posts';
+---
+
+<Base title="About" section="about">
+  <header class="page-header">
+    <h1>About</h1>
+  </header>
+  <div class="prose">
+    <p>
+      I'm <strong>FireSkull</strong> (<code>alwil17</code> on GitHub). I play capture-the-flag competitions and publish
+      structured writeups here.
+    </p>
+    <p>
+      Every writeup follows the same path: reconnaissance, analysis, exploitation, flag, remediation. The goal is not
+      only to show the flag but to make each solve reproducible, and to explain the root cause and how a defender would
+      fix it.
+    </p>
+    <ul>
+      <li><strong>Scope:</strong> web, crypto, pwn, reverse, forensics, stego, OSINT, cloud, boot2root, KOTH.</li>
+      <li>
+        <strong>Language:</strong> posts stay in the language I solved them in, French or English, and never mix the
+        two.
+      </li>
+      <li><strong>Format:</strong> see the <a href={url('/posts/writeup-style-guide/')}>writeup style guide</a>.</li>
+    </ul>
+    <h2 id="elsewhere">Elsewhere</h2>
+    <ul>
+      <li>Portfolio: <a href={SITE.portfolio}>{SITE.portfolio.replace('https://', '')}</a></li>
+      <li>GitHub: <a href={SITE.github}>{SITE.github.replace('https://', '')}</a></li>
+    </ul>
+    <div class="callout callout-note">
+      <p class="callout-title">Note</p>
+      <p>
+        Flags shown here are truncated and come only from challenges that are over. Nothing on this site discloses live infrastructure,
+        credentials or private competition data.
+      </p>
+    </div>
+  </div>
+</Base>

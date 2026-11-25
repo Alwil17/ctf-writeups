@@ -1,0 +1,239 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Difficulty from '../../components/Difficulty.astro';
+import {
+  getPosts, slugOf, postUrl, url, summaryOf, readingMinutes, formatDate, isoDate,
+  eventOf, categoryOf, slugify, type Post,
+} from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post, i) => ({
+    params: { slug: slugOf(post) },
+    // posts are newest first: the "next" (newer) one is at i - 1.
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer?: Post;
+  older?: Post;
+}
+
+const { post, newer, older } = Astro.props;
+const d = post.data;
+const { Content, headings } = await render(post);
+const toc = d.toc ? headings.filter((h) => h.depth === 2 || h.depth === 3) : [];
+const fr = d.lang === 'fr';
+const t = {
+  contents: fr ? 'Sommaire' : 'Contents',
+  min: fr ? 'min de lecture' : 'min read',
+  event: fr ? 'Événement' : 'Event',
+  category: fr ? 'Catégorie' : 'Category',
+  difficulty: fr ? 'Difficulté' : 'Difficulty',
+  points: 'Points',
+  flag: fr ? 'Format du flag' : 'Flag format',
+  solves: fr ? 'Résolutions' : 'Solves',
+  tags: 'Tags',
+  newer: fr ? 'Plus récent' : 'Newer',
+  older: fr ? 'Plus ancien' : 'Older',
+  top: fr ? 'Haut de page' : 'Back to top',
+};
+const event = eventOf(post);
+const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
+---
+
+<Base title={d.title} description={summaryOf(post)} lang={d.lang} type="article" section="writeups">
+  <Fragment slot="head">
+    <meta property="article:published_time" content={d.date.toISOString()} />
+    {d.tags.map((tag) => <meta property="article:tag" content={tag} />)}
+  </Fragment>
+
+  <article class:list={['post', toc.length > 2 && 'has-toc']}>
+    <header class="post-header">
+      <p class="crumbs">
+        <a href={url('/')}>Writeups</a>
+        <span aria-hidden="true">/</span>
+        <a href={url(`/#${slugify(event)}`)}>{event}</a>
+      </p>
+      <h1>{d.title}</h1>
+      <p class="post-byline">
+        <time datetime={isoDate(d.date)}>{formatDate(d.date, d.lang)}</time>
+        <span>{readingMinutes(post)} {t.min}</span>
+      </p>
+
+      {
+        hasMeta && (
+          <dl class="meta-box">
+            {d.ctf && (
+              <div>
+                <dt>{t.event}</dt>
+                <dd>{d.ctf}</dd>
+              </div>
+            )}
+            <div>
+              <dt>{t.category}</dt>
+              <dd>{d.category_label ?? categoryOf(post)}</dd>
+            </div>
+            {d.difficulty && (
+              <div>
+                <dt>{t.difficulty}</dt>
+                <dd>
+                  <Difficulty level={d.difficulty} />
+                </dd>
+              </div>
+            )}
+            {d.points ? (
+              <div>
+                <dt>{t.points}</dt>
+                <dd>{d.points}</dd>
+              </div>
+            ) : null}
+            {d.flag_format && (
+              <div>
+                <dt>{t.flag}</dt>
+                <dd>
+                  <code>{d.flag_format}</code>
+                </dd>
+              </div>
+            )}
+            {d.solves ? (
+              <div>
+                <dt>{t.solves}</dt>
+                <dd>{d.solves}</dd>
+              </div>
+            ) : null}
+          </dl>
+        )
+      }
+    </header>
+
+    {
+      toc.length > 2 && (
+        <nav class="toc" aria-label={t.contents}>
+          <details open>
+            <summary>{t.contents}</summary>
+            <ol>
+              {toc.map((h) => (
+                <li class={`toc-d${h.depth}`}>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ol>
+          </details>
+        </nav>
+      )
+    }
+
+    <div class="prose" data-pagefind-body>
+      <Content />
+    </div>
+
+    <footer class="post-footer">
+      {
+        d.tags.length > 0 && (
+          <ul class="tag-list" aria-label={t.tags}>
+            {d.tags.map((tag) => (
+              <li>
+                <a class="tag" href={url(`/tags/${slugify(tag)}/`)}>
+                  #{tag}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      <nav class="pager" aria-label="More writeups">
+        {
+          older ? (
+            <a class="pager-link" href={postUrl(older)} rel="prev">
+              <span>{t.older}</span>
+              {older.data.title}
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          newer && (
+            <a class="pager-link pager-next" href={postUrl(newer)} rel="next">
+              <span>{t.newer}</span>
+              {newer.data.title}
+            </a>
+          )
+        }
+      </nav>
+    </footer>
+  </article>
+</Base>
+
+<script>
+  // --- Code blocks: language label + copy button -------------------------
+  for (const pre of document.querySelectorAll<HTMLPreElement>('.prose pre')) {
+    const lang = pre.dataset.language;
+    const frame = document.createElement('div');
+    frame.className = 'code-frame';
+    const bar = document.createElement('div');
+    bar.className = 'code-bar';
+    const label = document.createElement('span');
+    label.textContent = lang && lang !== 'plaintext' && lang !== 'text' ? lang : 'output';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? pre.innerText);
+      btn.textContent = 'Copied';
+      btn.dataset.done = '';
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        delete btn.dataset.done;
+      }, 1600);
+    });
+    bar.append(label, btn);
+    pre.replaceWith(frame);
+    frame.append(bar, pre);
+    if (pre.scrollWidth > pre.clientWidth) pre.tabIndex = 0;
+  }
+
+  // --- Wide tables scroll inside their own box ----------------------------
+  for (const table of document.querySelectorAll('.prose table')) {
+    const box = document.createElement('div');
+    box.className = 'table-scroll';
+    table.replaceWith(box);
+    box.append(table);
+  }
+
+  // --- TOC: highlight the section being read -----------------------------
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].map((a) => [decodeURIComponent(a.hash.slice(1)), a]),
+  );
+  if (links.size) {
+    const heads = [...document.querySelectorAll<HTMLElement>('.prose h2[id], .prose h3[id]')].filter((h) =>
+      links.has(h.id),
+    );
+    let current: HTMLAnchorElement | undefined;
+    const update = () => {
+      let active = heads[0];
+      const line = innerHeight * 0.3;
+      for (const h of heads) if (h.getBoundingClientRect().top < line) active = h;
+      const a = links.get(active.id);
+      if (a === current) return;
+      current?.removeAttribute('aria-current');
+      a?.setAttribute('aria-current', 'location');
+      current = a;
+      // Keep the active entry visible inside the sticky TOC without moving the page.
+      const box = a?.closest('details');
+      if (a && box && box.scrollHeight > box.clientHeight) {
+        const top = a.offsetTop - box.clientHeight / 2;
+        box.scrollTo({ top, behavior: 'instant' });
+      }
+    };
+    addEventListener('scroll', update, { passive: true });
+    update();
+    // On narrow screens the TOC sits above the article: start it collapsed.
+    if (matchMedia('(max-width: 1279px)').matches) document.querySelector('.toc details')?.removeAttribute('open');
+  }
+</script>

@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getPosts, countBy, slugify, url } from '../../lib/posts';
+
+const posts = await getPosts();
+const tags = [...countBy(posts, (p) => p.data.tags).entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+---
+
+<Base title="Tags" section="tags">
+  <header class="page-header">
+    <h1>Tags</h1>
+    <p class="lede">{tags.length} techniques and technologies, most used first.</p>
+  </header>
+  <ul class="tag-cloud">
+    {
+      tags.map(([tag, n]) => (
+        <li>
+          <a class="tag" href={url(`/tags/${slugify(tag)}/`)}>
+            #{tag} <small>{n}</small>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</Base>
