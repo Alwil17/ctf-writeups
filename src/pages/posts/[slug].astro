@@ -51,15 +51,15 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
     {d.tags.map((tag) => <meta property="article:tag" content={tag} />)}
   </Fragment>
 
-  <article class:list={['post', toc.length > 2 && 'has-toc']}>
+  <article class:list={['post', toc.length > 2 && 'has-toc']} data-pagefind-body>
     <header class="post-header">
-      <p class="crumbs">
+      <p class="crumbs" data-pagefind-ignore>
         <a href={url('/')}>Writeups</a>
         <span aria-hidden="true">/</span>
         <a href={url(`/#${slugify(event)}`)}>{event}</a>
       </p>
       <h1>{d.title}</h1>
-      <p class="post-byline">
+      <p class="post-byline" data-pagefind-ignore>
         <time datetime={isoDate(d.date)}>{formatDate(d.date, d.lang)}</time>
         <span>{readingMinutes(post)} {t.min}</span>
       </p>
@@ -69,31 +69,35 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
           <dl class="meta-box">
             {d.ctf && (
               <div>
-                <dt>{t.event}</dt>
-                <dd>{d.ctf}</dd>
+                <dt data-pagefind-ignore>{t.event}</dt>
+                <dd data-pagefind-filter="Event">
+                  <a href={url(`/categories/${slugify(d.ctf)}/`)}>{d.ctf}</a>
+                </dd>
               </div>
             )}
             <div>
-              <dt>{t.category}</dt>
-              <dd>{d.category_label ?? categoryOf(post)}</dd>
+              <dt data-pagefind-ignore>{t.category}</dt>
+              <dd>
+                <a href={url(`/categories/${slugify(categoryOf(post))}/`)} data-pagefind-filter={`Category:${categoryOf(post)}`}>{d.category_label ?? categoryOf(post)}</a>
+              </dd>
             </div>
             {d.difficulty && (
               <div>
-                <dt>{t.difficulty}</dt>
-                <dd>
+                <dt data-pagefind-ignore>{t.difficulty}</dt>
+                <dd data-pagefind-filter="Difficulty">
                   <Difficulty level={d.difficulty} />
                 </dd>
               </div>
             )}
             {d.points ? (
               <div>
-                <dt>{t.points}</dt>
+                <dt data-pagefind-ignore>{t.points}</dt>
                 <dd>{d.points}</dd>
               </div>
             ) : null}
             {d.flag_format && (
               <div>
-                <dt>{t.flag}</dt>
+                <dt data-pagefind-ignore>{t.flag}</dt>
                 <dd>
                   <code>{d.flag_format}</code>
                 </dd>
@@ -101,7 +105,7 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
             )}
             {d.solves ? (
               <div>
-                <dt>{t.solves}</dt>
+                <dt data-pagefind-ignore>{t.solves}</dt>
                 <dd>{d.solves}</dd>
               </div>
             ) : null}
@@ -112,7 +116,7 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
 
     {
       toc.length > 2 && (
-        <nav class="toc" aria-label={t.contents}>
+        <nav class="toc" aria-label={t.contents} data-pagefind-ignore>
           <details open>
             <summary>{t.contents}</summary>
             <ol>
@@ -127,7 +131,7 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
       )
     }
 
-    <div class="prose" data-pagefind-body>
+    <div class="prose">
       <Content />
     </div>
 
@@ -139,13 +143,13 @@ const hasMeta = Boolean(d.ctf || d.difficulty || d.flag_format);
               <li>
                 <a class="tag" href={url(`/tags/${slugify(tag)}/`)}>
                   #{tag}
-                </a>
+                </a>{' '}
               </li>
             ))}
           </ul>
         )
       }
-      <nav class="pager" aria-label="More writeups">
+      <nav class="pager" aria-label="More writeups" data-pagefind-ignore>
         {
           older ? (
             <a class="pager-link" href={postUrl(older)} rel="prev">

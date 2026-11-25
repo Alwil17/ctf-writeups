@@ -1,0 +1,49 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getWriteups, countBy, eventOf, categoryOf, slugify, url } from '../../lib/posts';
+
+const posts = await getWriteups();
+const sortByCount = (m: Map<string, number>) => [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+const events = sortByCount(countBy(posts, eventOf));
+const categories = sortByCount(countBy(posts, categoryOf));
+const plural = (n: number) => `${n} ${n === 1 ? 'writeup' : 'writeups'}`;
+---
+
+<Base title="Categories" section="categories">
+  <header class="page-header">
+    <h1>Categories</h1>
+    <p class="lede">Browse writeups by event or by challenge category.</p>
+  </header>
+
+  <section class="cat-section">
+    <h2>Events</h2>
+    <ul class="cat-grid">
+      {
+        events.map(([name, n]) => (
+          <li>
+            <a class="cat-card" href={url(`/categories/${slugify(name)}/`)}>
+              <span class="cat-name">{name}</span>
+              <span class="cat-count">{plural(n)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="cat-section">
+    <h2>Challenge categories</h2>
+    <ul class="cat-grid">
+      {
+        categories.map(([name, n]) => (
+          <li>
+            <a class="cat-card" href={url(`/categories/${slugify(name)}/`)}>
+              <span class="cat-name">{name}</span>
+              <span class="cat-count">{plural(n)}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</Base>

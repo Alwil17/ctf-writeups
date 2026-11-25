@@ -1,10 +1,10 @@
 ---
 title: "Adzogbo — AD credential pivot from anonymous LDAP to the DC"
 date: 2026-11-19 19:00:00 +0000
-categories: ["NCTF26 Finale", "Active Directory"]
+categories: ["NCTF26 Prequals", "Active Directory"]
 tags: [active-directory, samba, ldap, smb, credential-leak, enumeration]
 lang: en
-ctf: "NCTF26 Finale"
+ctf: "NCTF26 Prequals"
 category_label: "Active Directory"
 difficulty: medium
 flag_format: "NCTF{...}"

@@ -1,0 +1,43 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostRow from '../../components/PostRow.astro';
+import { getWriteups, eventOf, categoryOf, slugify, url, type Post } from '../../lib/posts';
+
+// One page per event and per challenge category, at the same URLs Chirpy used
+// (/categories/nctf26-prequals/, /categories/boot2root/ …).
+export async function getStaticPaths() {
+  const posts = await getWriteups();
+  const pages = new Map<string, { name: string; kind: 'event' | 'category'; posts: Post[] }>();
+  const add = (name: string, kind: 'event' | 'category', p: Post) => {
+    const k = slugify(name);
+    if (!pages.has(k)) pages.set(k, { name, kind, posts: [] });
+    pages.get(k)!.posts.push(p);
+  };
+  for (const p of posts) {
+    add(eventOf(p), 'event', p);
+    add(categoryOf(p), 'category', p);
+  }
+  return [...pages.entries()].map(([slug, props]) => ({ params: { slug }, props }));
+}
+
+interface Props {
+  name: string;
+  kind: 'event' | 'category';
+  posts: Post[];
+}
+const { name, kind, posts } = Astro.props;
+const n = posts.length;
+---
+
+<Base title={name} description={`${n} CTF writeups: ${name}.`} section="categories">
+  <header class="page-header">
+    <p class="crumbs"><a href={url('/categories/')}>Categories</a></p>
+    <h1>{name}</h1>
+    <p class="lede">
+      {n} {n === 1 ? 'writeup' : 'writeups'}{kind === 'event' ? ' from this event' : ' in this category'}.
+    </p>
+  </header>
+  <ul class="post-list">
+    {posts.map((p) => <PostRow post={p} showEvent={kind === 'category'} />)}
+  </ul>
+</Base>
